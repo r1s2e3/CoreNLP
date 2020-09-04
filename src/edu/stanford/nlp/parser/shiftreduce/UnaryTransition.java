@@ -1,6 +1,8 @@
 package edu.stanford.nlp.parser.shiftreduce;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.parser.common.ParserConstraint;
@@ -18,13 +20,22 @@ public class UnaryTransition implements Transition {
   /** root transitions are illegal in the middle of the tree, naturally */
   public final boolean isRoot;
 
-  public UnaryTransition(String label, boolean isRoot) {
+  /** do not unary transition from punctuation tags */
+  public final Set<String> punctuationTags;
+
+  public UnaryTransition(String label, boolean isRoot, Set<String> punctuationTags) {
     this.label = label;
     this.isRoot = isRoot;
+    this.punctuationTags = (punctuationTags == null) ? Collections.emptySet() : punctuationTags;
   }
 
   /**
    * Legal as long as there is at least one item on the state's stack.
+   * <br>
+   * However, transitioning to a root state is not allowed if we are
+   * not the last item in the parse.
+   * <br>
+   * Also, unary transition from a punctuation node is disallowed.
    */
   public boolean isLegal(State state, List<ParserConstraint> constraints) {
     if (state.finished) {
@@ -53,6 +64,9 @@ public class UnaryTransition implements Transition {
       }
     }
     if (isRoot && (state.stack.size() > 1 || !state.endOfQueue())) {
+      return false;
+    }
+    if (punctuationTags.contains(top.label().value())) {
       return false;
     }
     // UnaryTransition actually doesn't care about the constraints.
