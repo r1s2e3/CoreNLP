@@ -69,7 +69,11 @@ public class CompoundUnaryTransition implements Transition {
     if (isRoot && (state.stack.size() > 1 || !state.endOfQueue())) {
       return false;
     }
-    if (punctuationTags.contains(top.label().value())) {
+    if (punctuationTags.contains(top.label().value()) &&
+        (state.stack.size() > 1 || !state.endOfQueue())) {
+      // if the state stack size is 1 and we are at the end of the
+      // queue, then we should allow unary transitions such as to the
+      // ROOT state
       return false;
     }
 
